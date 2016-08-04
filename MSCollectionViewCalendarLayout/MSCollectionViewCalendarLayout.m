@@ -36,6 +36,7 @@ NSString * const MSCollectionElementKindCurrentTimeIndicator = @"MSCollectionEle
 NSString * const MSCollectionElementKindCurrentTimeHorizontalGridline = @"MSCollectionElementKindCurrentTimeHorizontalGridline";
 NSString * const MSCollectionElementKindVerticalGridline = @"MSCollectionElementKindVerticalGridline";
 NSString * const MSCollectionElementKindHorizontalGridline = @"MSCollectionElementKindHorizontalGridline";
+NSString * const MSCollectionElementKindHorizontalHalfGridline = @"MSCollectionElementKindHorizontalHalfGridline";
 
 NSUInteger const MSCollectionMinOverlayZ = 1000.0; // Allows for 900 items in a section without z overlap issues
 NSUInteger const MSCollectionMinCellZ = 100.0;  // Allows for 100 items in a section's background
@@ -103,6 +104,7 @@ NSUInteger const MSCollectionMinBackgroundZ = 0.0;
 @property (nonatomic, strong) NSMutableDictionary *timeRowHeaderAttributes;
 @property (nonatomic, strong) NSMutableDictionary *timeRowHeaderBackgroundAttributes;
 @property (nonatomic, strong) NSMutableDictionary *horizontalGridlineAttributes;
+@property (nonatomic, strong) NSMutableDictionary *horizontalHalfGridlineAttributes;
 @property (nonatomic, strong) NSMutableDictionary *verticalGridlineAttributes;
 @property (nonatomic, strong) NSMutableDictionary *currentTimeIndicatorAttributes;
 @property (nonatomic, strong) NSMutableDictionary *currentTimeHorizontalGridlineAttributes;
@@ -217,6 +219,7 @@ NSUInteger const MSCollectionMinBackgroundZ = 0.0;
         [self.allAttributes addObjectsFromArray:[self.timeRowHeaderBackgroundAttributes allValues]];
         [self.allAttributes addObjectsFromArray:[self.verticalGridlineAttributes allValues]];
         [self.allAttributes addObjectsFromArray:[self.horizontalGridlineAttributes allValues]];
+        [self.allAttributes addObjectsFromArray:[self.horizontalHalfGridlineAttributes allValues]];
         [self.allAttributes addObjectsFromArray:[self.itemAttributes allValues]];
         [self.allAttributes addObjectsFromArray:[self.currentTimeIndicatorAttributes allValues]];
         [self.allAttributes addObjectsFromArray:[self.currentTimeHorizontalGridlineAttributes allValues]];
@@ -344,6 +347,9 @@ NSUInteger const MSCollectionMinBackgroundZ = 0.0;
             UICollectionViewLayoutAttributes *horizontalGridlineAttributes = [self layoutAttributesForDecorationViewAtIndexPath:verticalGridlineIndexPath ofKind:MSCollectionElementKindVerticalGridline withItemCache:self.verticalGridlineAttributes];
             CGFloat horizontalGridlineMinX = nearbyintf(sectionMinX - self.sectionMargin.left - (self.verticalGridlineWidth / 2.0));
             horizontalGridlineAttributes.frame = CGRectMake(horizontalGridlineMinX, calendarGridMinY, self.verticalGridlineWidth, sectionHeight);
+            
+            UICollectionViewLayoutAttributes *horizontalHalfGridlineAttributes = [self layoutAttributesForDecorationViewAtIndexPath:verticalGridlineIndexPath ofKind:MSCollectionElementKindVerticalGridline withItemCache:self.verticalGridlineAttributes];
+            horizontalHalfGridlineAttributes.frame = CGRectMake(horizontalGridlineMinX, calendarGridMinY, self.verticalGridlineWidth, sectionHeight);
         }
         
         if (needsToPopulateItemAttributes) {
@@ -393,6 +399,20 @@ NSUInteger const MSCollectionMinBackgroundZ = 0.0;
         CGFloat horizontalGridlineWidth = fminf(calendarGridWidth, self.collectionView.frame.size.width);
         horizontalGridlineAttributes.frame = CGRectMake(horizontalGridlineMinX, horizontalGridlineMinY, horizontalGridlineWidth, self.horizontalGridlineHeight);
         horizontalGridlineIndex++;
+    }
+    
+    // Horizontal Half Gridlines
+    NSUInteger horizontalHalfGridlineIndex = 0;
+    for (NSInteger hour = earliestHour; hour <= latestHour; hour++) {
+        NSIndexPath *horizontalHalfGridlineIndexPath = [NSIndexPath indexPathForItem:horizontalHalfGridlineIndex inSection:0];
+        UICollectionViewLayoutAttributes *horizontalHalfGridlineAttributes = [self layoutAttributesForDecorationViewAtIndexPath:horizontalHalfGridlineIndexPath ofKind:MSCollectionElementKindHorizontalHalfGridline withItemCache:self.horizontalHalfGridlineAttributes];
+        CGFloat horizontalHalfGridlineMinY = nearbyintf(calendarContentMinY + (self.hourHeight * (hour - earliestHour))) - (self.horizontalGridlineHeight / 2.0);
+        
+        CGFloat horizontalHalfGridlineXOffset = (calendarGridMinX + self.sectionMargin.left);
+        CGFloat horizontalHalfGridlineMinX = fmaxf(horizontalHalfGridlineXOffset, self.collectionView.contentOffset.x + horizontalHalfGridlineXOffset);
+        CGFloat horizontalHalfGridlineWidth = fminf(calendarGridWidth, self.collectionView.frame.size.width);
+        horizontalHalfGridlineAttributes.frame = CGRectMake(horizontalHalfGridlineMinX, horizontalHalfGridlineMinY + self.hourHeight / 2, horizontalHalfGridlineWidth, self.horizontalGridlineHeight);
+        horizontalHalfGridlineIndex++;
     }
 }
 
@@ -525,6 +545,11 @@ NSUInteger const MSCollectionMinBackgroundZ = 0.0;
                 CGFloat horizontalGridlineMinY = (calendarGridMinY + (self.hourHeight * (hour - earliestHour))) - nearbyintf(self.horizontalGridlineHeight / 2.0);
                 horizontalGridlineAttributes.frame = CGRectMake(calendarGridMinX, horizontalGridlineMinY, calendarGridWidth, self.horizontalGridlineHeight);
                 horizontalGridlineAttributes.zIndex = [self zIndexForElementKind:MSCollectionElementKindHorizontalGridline];
+                
+                UICollectionViewLayoutAttributes *horizontalHalfGridlineAttributes = [self layoutAttributesForDecorationViewAtIndexPath:horizontalGridlineIndexPath ofKind:MSCollectionElementKindHorizontalHalfGridline withItemCache:self.horizontalHalfGridlineAttributes];
+                horizontalHalfGridlineAttributes.frame = CGRectMake(calendarGridMinX, horizontalGridlineMinY, calendarGridWidth, self.horizontalGridlineHeight);
+                horizontalHalfGridlineAttributes.zIndex = [self zIndexForElementKind:MSCollectionElementKindHorizontalHalfGridline];
+                
                 horizontalGridlineIndex++;
             }
         }
@@ -670,6 +695,9 @@ NSUInteger const MSCollectionMinBackgroundZ = 0.0;
     else if (decorationViewKind == MSCollectionElementKindHorizontalGridline) {
         return self.horizontalGridlineAttributes[indexPath];
     }
+    else if (decorationViewKind == MSCollectionElementKindHorizontalHalfGridline) {
+        return self.horizontalHalfGridlineAttributes[indexPath];
+    }
     else if (decorationViewKind == MSCollectionElementKindTimeRowHeaderBackground) {
         return self.timeRowHeaderBackgroundAttributes[indexPath];
     }
@@ -730,6 +758,7 @@ NSUInteger const MSCollectionMinBackgroundZ = 0.0;
     self.timeRowHeaderBackgroundAttributes = [NSMutableDictionary new];
     self.verticalGridlineAttributes = [NSMutableDictionary new];
     self.horizontalGridlineAttributes = [NSMutableDictionary new];
+    self.horizontalHalfGridlineAttributes = [NSMutableDictionary new];
     self.currentTimeIndicatorAttributes = [NSMutableDictionary new];
     self.currentTimeHorizontalGridlineAttributes = [NSMutableDictionary new];
     
@@ -823,6 +852,7 @@ NSUInteger const MSCollectionMinBackgroundZ = 0.0;
     [self.itemAttributes removeAllObjects];
     [self.verticalGridlineAttributes removeAllObjects];
     [self.horizontalGridlineAttributes removeAllObjects];
+    [self.horizontalHalfGridlineAttributes removeAllObjects];
     [self.dayColumnHeaderAttributes removeAllObjects];
     [self.dayColumnHeaderBackgroundAttributes removeAllObjects];
     [self.timeRowHeaderAttributes removeAllObjects];
@@ -1056,6 +1086,9 @@ NSUInteger const MSCollectionMinBackgroundZ = 0.0;
             else if (elementKind == MSCollectionElementKindHorizontalGridline) {
                 return MSCollectionMinBackgroundZ;
             }
+            else if (elementKind == MSCollectionElementKindHorizontalHalfGridline) {
+                return MSCollectionMinBackgroundZ;
+            }
         }
         case MSSectionLayoutTypeVerticalTile: {
             // Day Column Header
@@ -1088,6 +1121,9 @@ NSUInteger const MSCollectionMinBackgroundZ = 0.0;
             }
             // Horizontal Gridline
             else if (elementKind == MSCollectionElementKindHorizontalGridline) {
+                return MSCollectionMinBackgroundZ;
+            }
+            else if (elementKind == MSCollectionElementKindHorizontalHalfGridline) {
                 return MSCollectionMinBackgroundZ;
             }
         }
