@@ -306,7 +306,7 @@ NSUInteger const MSCollectionMinBackgroundZ = 0.0;
         currentTimeHorizontalGridlineAttributes.frame = CGRectMake(currentTimeHorizontalGridlineMinX, currentTimeHorizontalGridlineMinY, currentTimehorizontalGridlineWidth, self.currentTimeHorizontalGridlineHeight);
         currentTimeHorizontalGridlineAttributes.zIndex = [self zIndexForElementKind:MSCollectionElementKindCurrentTimeHorizontalGridline];
     }
-
+    
     // Day Column Header
     CGFloat dayColumnHeaderMinY = fmaxf(self.collectionView.contentOffset.y, 0.0);
     BOOL dayColumnHeaderFloating = ((dayColumnHeaderMinY != 0) || self.displayHeaderBackgroundAtOrigin);
@@ -347,9 +347,11 @@ NSUInteger const MSCollectionMinBackgroundZ = 0.0;
             UICollectionViewLayoutAttributes *horizontalGridlineAttributes = [self layoutAttributesForDecorationViewAtIndexPath:verticalGridlineIndexPath ofKind:MSCollectionElementKindVerticalGridline withItemCache:self.verticalGridlineAttributes];
             CGFloat horizontalGridlineMinX = nearbyintf(sectionMinX - self.sectionMargin.left - (self.verticalGridlineWidth / 2.0));
             horizontalGridlineAttributes.frame = CGRectMake(horizontalGridlineMinX, calendarGridMinY, self.verticalGridlineWidth, sectionHeight);
+            horizontalGridlineAttributes.zIndex = [self zIndexForElementKind:MSCollectionElementKindVerticalGridline];
             
             UICollectionViewLayoutAttributes *horizontalHalfGridlineAttributes = [self layoutAttributesForDecorationViewAtIndexPath:verticalGridlineIndexPath ofKind:MSCollectionElementKindVerticalGridline withItemCache:self.verticalGridlineAttributes];
             horizontalHalfGridlineAttributes.frame = CGRectMake(horizontalGridlineMinX, calendarGridMinY, self.verticalGridlineWidth, sectionHeight);
+            horizontalGridlineAttributes.zIndex = [self zIndexForElementKind:MSCollectionElementKindVerticalGridline];
         }
         
         if (needsToPopulateItemAttributes) {
@@ -429,7 +431,7 @@ NSUInteger const MSCollectionMinBackgroundZ = 0.0;
     // Current Time Horizontal Gridline
     NSIndexPath *currentTimeHorizontalGridlineIndexPath = [NSIndexPath indexPathForRow:0 inSection:0];
     UICollectionViewLayoutAttributes *currentTimeHorizontalGridlineAttributes = [self layoutAttributesForDecorationViewAtIndexPath:currentTimeHorizontalGridlineIndexPath ofKind:MSCollectionElementKindCurrentTimeHorizontalGridline withItemCache:self.currentTimeHorizontalGridlineAttributes];
-
+    
     // Start these off hidden, and unhide them in the case of the current time indicator being within a specified section
     currentTimeIndicatorAttributes.frame = CGRectZero;
     currentTimeHorizontalGridlineAttributes.frame = CGRectZero;
@@ -476,7 +478,7 @@ NSUInteger const MSCollectionMinBackgroundZ = 0.0;
             
             // The y value of the current time
             CGFloat timeY = (calendarGridMinY + nearbyintf(((currentTimeDateComponents.hour - earliestHour) * self.hourHeight) + (currentTimeDateComponents.minute * self.minuteHeight)));
-
+            
             CGFloat currentTimeIndicatorMinY = (timeY - nearbyintf(self.currentTimeIndicatorSize.height / 2.0));
             CGFloat currentTimeIndicatorMinX = (self.timeRowHeaderWidth - self.currentTimeIndicatorSize.width);
             currentTimeIndicatorAttributes.frame = (CGRect){{currentTimeIndicatorMinX, currentTimeIndicatorMinY}, self.currentTimeIndicatorSize};
@@ -621,11 +623,11 @@ NSUInteger const MSCollectionMinBackgroundZ = 0.0;
                 
                 // It it hasn't yet been adjusted, perform adjustment
                 if (![adjustedAttributes containsObject:divisionAttributes]) {
-                
+                    
                     CGRect divisionAttributesFrame = divisionAttributes.frame;
                     divisionAttributesFrame.origin.x = (sectionMinX + self.cellMargin.left);
                     divisionAttributesFrame.size.width = itemWidth;
-                
+                    
                     // Horizontal Layout
                     NSInteger adjustments = 1;
                     for (UICollectionViewLayoutAttributes *dividedItemAttributes in dividedAttributes) {
@@ -634,7 +636,7 @@ NSUInteger const MSCollectionMinBackgroundZ = 0.0;
                             adjustments++;
                         }
                     }
-
+                    
                     // Stacking (lower items stack above higher items, since the title is at the top)
                     divisionAttributes.zIndex = sectionZ;
                     sectionZ ++;
@@ -708,7 +710,7 @@ NSUInteger const MSCollectionMinBackgroundZ = 0.0;
 }
 
 - (NSArray *)layoutAttributesForElementsInRect:(CGRect)rect
-{   
+{
     NSMutableIndexSet *visibleSections = [NSMutableIndexSet indexSet];
     [[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, self.collectionView.numberOfSections)] enumerateIndexesUsingBlock:^(NSUInteger section, BOOL *stop) {
         CGRect sectionRect = [self rectForSection:section];
@@ -931,7 +933,7 @@ NSUInteger const MSCollectionMinBackgroundZ = 0.0;
 {
     NSDate *currentTime = [self.delegate currentTimeComponentsForCollectionView:self.collectionView layout:self];
     NSDate *startOfCurrentDay = [[NSCalendar currentCalendar] startOfDayForDate:currentTime];
-
+    
     NSTimeInterval minTimeInterval = CGFLOAT_MAX;
     NSInteger closestSection = NSIntegerMax;
     for (NSInteger section = 0; section < self.collectionView.numberOfSections; section++) {
@@ -1228,10 +1230,10 @@ NSUInteger const MSCollectionMinBackgroundZ = 0.0;
     if ([self.cachedDayDateComponents objectForKey:@(section)]) {
         return [self.cachedDayDateComponents objectForKey:@(section)];
     }
-
+    
     NSDate *day = [self.delegate collectionView:self.collectionView layout:self dayForSection:section];
     NSDate *startOfDay = [[NSCalendar currentCalendar] startOfDayForDate:day];
-
+    
     NSDateComponents *dayDateComponents = [[NSCalendar currentCalendar] components:(NSCalendarUnitDay | NSCalendarUnitMonth | NSCalendarUnitYear | NSCalendarUnitEra) fromDate:startOfDay];
     
     [self.cachedDayDateComponents setObject:dayDateComponents forKey:@(section)];
